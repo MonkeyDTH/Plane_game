@@ -20,6 +20,46 @@ def load_img_shape(img_fname):
     return bkg_img.shape[1], bkg_img.shape[0]
 
 
+class Point(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def position(self, point):
+        if self.x <= point.x:
+            if self.y <= point.y:
+                return 3
+            else:
+                return
+
+
+class Image(object):
+    def __init__(self, x, y, width, height):
+        self.leftUp = Point(x, y)
+        self.width = width
+        self.height = height
+
+    def touch(self, image):
+        if self.leftUp.x < image.leftUp.x and self.leftUp.x + self.width > image.leftUp.x:
+            pass
+
+
+class Bullet(Image):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+
+    def move(self, distance):
+        self.leftUp = Point(self.leftUp.x, self.leftUp.y - distance)
+
+
+class Monster(Image):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+
+    def move(self, distance):
+        self.leftUp = Point(self.leftUp.x, self.leftUp.y + distance)
+
+
 def main():
     bkg_img_fname = './resource/background.jpg'
     plane_fname = './resource/space-rocket.png'
@@ -64,26 +104,26 @@ def main():
         y_plane = y - mouse_cursor.get_height() / 2
         screen.blit(mouse_cursor, (x_plane, y_plane))
 
-        # bullet fire rate
+        # bullet fire control
         if num % 250 == 100:
-            bullet_list.append([x, y - 80])
+            bullet_list.append(Bullet(x, y - 80, width_bullet, height_bullet))
         # monster appear rate
         if num == 500:
             num = 0
-            monster_list.append([random.randint(0, width_bkg - 64), 0])
+            monster_list.append(Monster(random.randint(0, width_bkg-width_monster), 0, width_monster, height_monster))
 
         # draw bullet
-        for i in range(len(bullet_list)):
-            screen.blit(bullet, (bullet_list[i][0], bullet_list[i][1]))
-            bullet_list[i][1] -= 1
-
-        # compute monster disappear
+        for each_bullet in bullet_list:
+            screen.blit(bullet, (each_bullet.leftUp.x, each_bullet.leftUp.y))
+            each_bullet.move(1)
+            for each_monster in monster_list:
+                if each_monster
 
         # draw monster
-        for i in range(len(monster_list)):
-            screen.blit(monster, (monster_list[i][0], monster_list[i][1]))
+        for each_monster in monster_list:
+            screen.blit(monster, (each_monster.leftUp.x, each_monster.leftUp.y))
             if num % 2 == 0:
-                monster_list[i][1] += 1
+                each_monster.move(1)
 
         # update window
         pygame.display.update()
