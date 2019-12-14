@@ -47,6 +47,7 @@ def main():
 
     bullet_list = []
     monster_list = []
+    score = 0
     num = 0
 
     # main loop
@@ -67,7 +68,12 @@ def main():
         plane = Plane(x_plane, y_plane, width_plane, height_plane)
         # plane crash
         for monster in monster_list:
-            if plane.touch(monster):
+            if plane.touch(monster):  # game over
+                my_font = pygame.font.Font('./resource/LT_55869.TTF', 70)
+                text_surface = my_font.render("Game Over!", True, (255, 255, 255))
+                screen.blit(text_surface, (width_bkg / 2 - 200, height_bkg / 2 - 120))
+                pygame.display.update()
+                time.sleep(2)
                 exit()
         screen.blit(plane_img, (x_plane, y_plane))
 
@@ -75,7 +81,7 @@ def main():
         if num % 150 == 0:
             bullet_list.append(Bullet(x, y - 80, width_bullet, height_bullet))
         # monster appear rate
-        if random.randint(0, 500) == num:
+        if random.randint(0, 500) == num % 500:
             monster_list.append(Monster(random.randint(0, width_bkg-width_monster), 0, width_monster, height_monster))
 
         # draw bullet
@@ -86,6 +92,8 @@ def main():
             for monster in monster_list:
                 if monster.touch(bullet):
                     monster_list.remove(monster)
+                    bullet_list.remove(bullet)
+                    break
 
         # draw monster
         for monster in monster_list:
@@ -93,11 +101,18 @@ def main():
             if num % 2 == 0:
                 monster.move(1)
 
+        # count time
+        num += 1
+        if num == 20000:
+            my_font = pygame.font.Font('./resource/FZShenYMXSJW.TTF', 40)
+            text_surface = my_font.render("玩这么久，休息一会吧！", True, (255, 255, 255))
+            screen.blit(text_surface, (width_bkg / 2 - 200, height_bkg / 2 - 30))
+            pygame.display.update()
+            time.sleep(2)
+            exit()
+
         # update window
         pygame.display.update()
-        num += 1
-        if num == 500:
-            num = 0
         time.sleep(0.001)
 
 
