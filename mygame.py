@@ -52,6 +52,12 @@ def main():
     # set title
     pygame.display.set_caption("TH game!")
 
+    # set background music and sound effect
+    pygame.mixer.init()
+    sound_effect = pygame.mixer.Sound("./resource/hit.wav")
+    pygame.mixer.music.load("./resource/brave_heart.mp3")
+    pygame.mixer.music.play(-1)
+
     # load image
     bkg_img = pygame.image.load(bkg_img_fname).convert()
     plane_img = pygame.image.load(plane_fname).convert_alpha()
@@ -118,6 +124,7 @@ def main():
             for monster in monster_list:
                 if monster.touch(bullet):
                     score += 1
+                    sound_effect.play()
                     monster_list.remove(monster)
                     bullet_list.remove(bullet)
                     break
