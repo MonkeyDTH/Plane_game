@@ -26,7 +26,7 @@ class Image(object):
 
     def touch(self, image):
         # x touch
-        if (self.leftUp.x + self.width > image.leftUp.x + image.width) and (self.leftUp.x < image.leftUp.x + image.width):
+        if (self.leftUp.x + self.width > image.leftUp.x) and (self.leftUp.x < image.leftUp.x + image.width):
             if (self.leftUp.y + self.height > image.leftUp.y) and (self.leftUp.y < image.leftUp.y + image.height):
                 return True
         return False

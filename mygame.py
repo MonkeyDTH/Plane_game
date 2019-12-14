@@ -21,17 +21,13 @@ def load_img_shape(img_fname):
     return bkg_img.shape[1], bkg_img.shape[0]
 
 
-def text_mid(text, screen, width, height, language='eng'):
+def text_display(text, screen, x, y, size=70, language='eng'):
     if language == 'eng':
-        my_font = pygame.font.Font('./resource/LT_55869.TTF', 70)
-        text_surface = my_font.render(text, True, (255, 255, 255))
-        screen.blit(text_surface, (width / 2 - len(text) * 20, height / 2 - 120))
+        my_font = pygame.font.Font('./resource/LT_55869.TTF', size)
     elif language == 'chs':  # chinese
-        my_font = pygame.font.Font('./resource/FZShenYMXSJW.TTF', 40)
-        text_surface = my_font.render("玩这么久，休息一会吧！", True, (255, 255, 255))
-        screen.blit(text_surface, (width / 2 - len(text) * 20, height / 2 - 120))
-    else:
-        pass
+        my_font = pygame.font.Font('./resource/FZShenYMXSJW.TTF', size)
+    text_surface = my_font.render(text, True, (255, 255, 255))
+    screen.blit(text_surface, (x, y))
 
 
 def main():
@@ -64,11 +60,20 @@ def main():
     bullet_img = pygame.image.load(bullet_fname).convert_alpha()
     monster_img = pygame.image.load(monster_fname).convert_alpha()
 
+    # init params
     bullet_list = []
     monster_list = []
     score = 0
     num = 0
+    level = 0
+    level_start = True
     pause = False
+
+    # start game
+    text_display("TH Game", screen, width_bkg // 2 - 140, height_bkg // 2 - 60)
+    pygame.display.update()
+    time.sleep(2)
+    screen.blit(bkg_img, (0, 0))
 
     # main loop
     while True:
@@ -83,46 +88,93 @@ def main():
         # draw background
         screen.blit(bkg_img, (0, 0))
 
+        # count time and level up
+        if num == 7000:
+            if level == 10:  # top level
+                text_display("玩这么久，休息一会吧！", screen,
+                             width_bkg // 2 - 200, height_bkg // 2 - 20, size=40, language="chs")
+                pygame.display.update()
+                time.sleep(2)
+                exit()
+            if score >= (level + 1) * (10 + level):  # level up
+                level += 1
+                level_start = True
+                num = 0
+                bullet_list = []
+                monster_list = []
+                screen.blit(bkg_img, (0, 0))
+                text_display("Level Up！", screen, width_bkg // 2 - 150, height_bkg // 2 - 120)
+                pygame.display.update()
+                time.sleep(2)
+                continue
+            else:  # can't pass the level
+                text_display("Time Over！", screen, width_bkg // 2 - 180, height_bkg // 2 - 120)
+                pygame.display.update()
+                time.sleep(2)
+                screen.blit(bkg_img, (0, 0))
+                text_display("Game Over!", screen, width_bkg // 2 - 200, height_bkg // 2 - 120)
+                pygame.display.update()
+                time.sleep(2)
+                exit()
+
+        # display level
+        if level_start:
+            text_display("Level {0}".format(level), screen, width_bkg // 2 - 130, height_bkg // 2 - 120)
+            pygame.display.update()
+            time.sleep(1.5)
+            level_start = False
+
         # display score
-        my_font = pygame.font.Font('./resource/LT_55869.TTF', 40)
-        text_surface = my_font.render("score: {0}".format(score), True, (255, 255, 255))
-        screen.blit(text_surface, (width_bkg / 2 - 80, height_bkg / 2 - 50))
+        text_display("score: {0:3d}".format(score), screen, width_bkg / 2 - 100, height_bkg / 2 - 50, size=40)
 
         # handle pause
         if pause:
-            text_mid("Pause!", screen, width_bkg, height_bkg)
+            text_display("Pause!", screen, width_bkg // 2 - 105, height_bkg // 2 - 120)
             pygame.display.update()
             continue
 
         # get mouse position
-        x, y = pygame.mouse.get_pos()
-        # draw mouse cursor img
-        x_plane = x - width_plane / 2
-        y_plane = y - height_plane / 2
-        plane = Plane(x_plane, y_plane, width_plane, height_plane)
-        # plane crash
-        for monster in monster_list:
-            if plane.touch(monster):  # game over
-                text_mid("Game Over!", screen, width_bkg, height_bkg)
-                pygame.display.update()
-                time.sleep(2)
-                exit()
-        screen.blit(plane_img, (x_plane, y_plane))
+        if num <= 100:
+            x, y = width_bkg / 2 - width_plane / 2, height_bkg - height_plane
+        else:
+            x, y = pygame.mouse.get_pos()
+            # handle border
+            x = max(x, width_plane // 2)
+            x = min(x, width_bkg - width_plane // 2)
+            y = max(y, height_plane // 2)
+            y = min(y, height_bkg - height_plane // 2)
+            # draw mouse cursor img
+            x_plane = x - width_plane / 2
+            y_plane = y - height_plane / 2
+            plane = Plane(x_plane, y_plane, width_plane, height_plane)
+            # plane crash
+            for monster in monster_list:
+                if plane.touch(monster):  # game over
+                    text_display("Game Over!", screen, width_bkg // 2 - 200, height_bkg // 2 - 120)
+                    pygame.display.update()
+                    time.sleep(2)
+                    exit()
+            screen.blit(plane_img, (x_plane, y_plane))
 
         # bullet fire control
-        if num % 150 == 0:
-            bullet_list.append(Bullet(x, y - 80, width_bullet, height_bullet))
-        # monster appear rate
-        if random.randint(0, 300) == num % 300:
+        base_speed = 200
+        bullet_speed = int(base_speed * (1 - level * 0.1))
+        if bullet_speed <= 0:
+            bullet_speed = 10
+        if num % bullet_speed == 0:
+            bullet_list.append(Bullet(x - width_bullet / 2, y - height_bullet / 2, width_bullet, height_bullet))
+        # monster appear control
+        monster_speed = int(bullet_speed * (2 - level * 0.12))
+        if random.randint(0, monster_speed) == num % monster_speed:
             monster_list.append(Monster(random.randint(0, width_bkg-width_monster), 0, width_monster, height_monster))
 
         # draw bullet
         for bullet in bullet_list:
             screen.blit(bullet_img, (bullet.leftUp.x, bullet.leftUp.y))
-            bullet.move(1)
+            bullet.move(2)
             # destroy monster
             for monster in monster_list:
-                if monster.touch(bullet):
+                if monster.leftUp.y > 50 and monster.touch(bullet):
                     score += 1
                     sound_effect.play()
                     monster_list.remove(monster)
@@ -135,17 +187,12 @@ def main():
             if num % 2 == 0:
                 monster.move(1)
 
-        # count time and rest
+        # count time and level up
         num += 1
-        if num == 10000:
-            text_mid("玩这么久，休息一会吧！", screen, width_bkg, height_bkg, language="chs")
-            pygame.display.update()
-            time.sleep(2)
-            exit()
 
         # update window
         pygame.display.update()
-        time.sleep(0.001)
+        # time.sleep(0.001)
 
 
 if __name__ == "__main__":
