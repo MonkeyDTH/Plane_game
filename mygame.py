@@ -21,6 +21,19 @@ def load_img_shape(img_fname):
     return bkg_img.shape[1], bkg_img.shape[0]
 
 
+def text_mid(text, screen, width, height, language='eng'):
+    if language == 'eng':
+        my_font = pygame.font.Font('./resource/LT_55869.TTF', 70)
+        text_surface = my_font.render(text, True, (255, 255, 255))
+        screen.blit(text_surface, (width / 2 - len(text) * 20, height / 2 - 120))
+    elif language == 'chs':  # chinese
+        my_font = pygame.font.Font('./resource/FZShenYMXSJW.TTF', 40)
+        text_surface = my_font.render("玩这么久，休息一会吧！", True, (255, 255, 255))
+        screen.blit(text_surface, (width / 2 - len(text) * 20, height / 2 - 120))
+    else:
+        pass
+
+
 def main():
     bkg_img_fname = './resource/background.jpg'
     plane_fname = './resource/space-rocket.png'
@@ -49,6 +62,7 @@ def main():
     monster_list = []
     score = 0
     num = 0
+    pause = False
 
     # main loop
     while True:
@@ -56,9 +70,23 @@ def main():
             # QUIT event
             if event.type == QUIT:
                 exit()
+            if event.type == KEYDOWN:
+                if event.key == K_SPACE:
+                    pause = ~pause
 
         # draw background
         screen.blit(bkg_img, (0, 0))
+
+        # display score
+        my_font = pygame.font.Font('./resource/LT_55869.TTF', 40)
+        text_surface = my_font.render("score: {0}".format(score), True, (255, 255, 255))
+        screen.blit(text_surface, (width_bkg / 2 - 80, height_bkg / 2 - 50))
+
+        # handle pause
+        if pause:
+            text_mid("Pause!", screen, width_bkg, height_bkg)
+            pygame.display.update()
+            continue
 
         # get mouse position
         x, y = pygame.mouse.get_pos()
@@ -69,9 +97,7 @@ def main():
         # plane crash
         for monster in monster_list:
             if plane.touch(monster):  # game over
-                my_font = pygame.font.Font('./resource/LT_55869.TTF', 70)
-                text_surface = my_font.render("Game Over!", True, (255, 255, 255))
-                screen.blit(text_surface, (width_bkg / 2 - 200, height_bkg / 2 - 120))
+                text_mid("Game Over!", screen, width_bkg, height_bkg)
                 pygame.display.update()
                 time.sleep(2)
                 exit()
@@ -81,7 +107,7 @@ def main():
         if num % 150 == 0:
             bullet_list.append(Bullet(x, y - 80, width_bullet, height_bullet))
         # monster appear rate
-        if random.randint(0, 500) == num % 500:
+        if random.randint(0, 300) == num % 300:
             monster_list.append(Monster(random.randint(0, width_bkg-width_monster), 0, width_monster, height_monster))
 
         # draw bullet
@@ -91,6 +117,7 @@ def main():
             # destroy monster
             for monster in monster_list:
                 if monster.touch(bullet):
+                    score += 1
                     monster_list.remove(monster)
                     bullet_list.remove(bullet)
                     break
@@ -101,12 +128,10 @@ def main():
             if num % 2 == 0:
                 monster.move(1)
 
-        # count time
+        # count time and rest
         num += 1
-        if num == 20000:
-            my_font = pygame.font.Font('./resource/FZShenYMXSJW.TTF', 40)
-            text_surface = my_font.render("玩这么久，休息一会吧！", True, (255, 255, 255))
-            screen.blit(text_surface, (width_bkg / 2 - 200, height_bkg / 2 - 30))
+        if num == 10000:
+            text_mid("玩这么久，休息一会吧！", screen, width_bkg, height_bkg, language="chs")
             pygame.display.update()
             time.sleep(2)
             exit()
