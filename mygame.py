@@ -68,6 +68,9 @@ def main():
     level = 0
     level_start = True
     pause = False
+    fps = 1000
+
+    fcclock = pygame.time.Clock()  # 创建一个时间对象
 
     # start game
     text_display("TH Game", screen, width_bkg // 2 - 140, height_bkg // 2 - 60)
@@ -96,7 +99,7 @@ def main():
                 pygame.display.update()
                 time.sleep(2)
                 exit()
-            if score >= (level + 1) * (10 + level):  # level up
+            if score >= (level + 1) * (15 + level):  # level up
                 level += 1
                 level_start = True
                 num = 0
@@ -157,14 +160,14 @@ def main():
             screen.blit(plane_img, (x_plane, y_plane))
 
         # bullet fire control
-        base_speed = 200
+        base_speed = 150
         bullet_speed = int(base_speed * (1 - level * 0.1))
         if bullet_speed <= 0:
             bullet_speed = 10
         if num % bullet_speed == 0:
             bullet_list.append(Bullet(x - width_bullet / 2, y - height_bullet / 2, width_bullet, height_bullet))
         # monster appear control
-        monster_speed = int(bullet_speed * (2 - level * 0.12))
+        monster_speed = int(bullet_speed * (1.8 - level * 0.15))
         if random.randint(0, monster_speed) == num % monster_speed:
             monster_list.append(Monster(random.randint(0, width_bkg-width_monster), 0, width_monster, height_monster))
 
@@ -191,6 +194,7 @@ def main():
         num += 1
 
         # update window
+        fcclock.tick(fps)
         pygame.display.update()
         # time.sleep(0.001)
 
